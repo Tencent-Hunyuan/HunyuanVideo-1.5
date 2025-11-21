@@ -217,6 +217,7 @@ SPARSE_ATTN=true # 使用稀疏注意力进行推理
 SAGE_ATTN=false # 使用 SageAttention 进行推理
 MODEL_PATH=ckpts # 预训练模型路径
 REWRITE=true # 启用提示词重写
+OVERLAP_GROUP_OFFLOADING=true # 仅在组卸载启用时有效，会显著增加 CPU 内存占用，但能够提速
 
 torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
   --prompt "$PROMPT" \
@@ -229,6 +230,7 @@ torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
   --use_sageattn $SAGE_ATTN \
   --rewrite $REWRITE \
   --output_path $OUTPUT_PATH \
+  --overlap_group_offloading $OVERLAP_GROUP_OFFLOADING \
   --save_pre_sr_video \
   --model_path $MODEL_PATH
 ```
@@ -254,6 +256,7 @@ torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
 | `--sparse_attn` | bool | 否 | `false` | 启用稀疏注意力以加速推理（约 1.5-2 倍加速，需要 H 系列 GPU，会自动启用 CFG 蒸馏，使用 `--sparse_attn` 或 `--sparse_attn true` 来启用） |
 | `--offloading` | bool | 否 | `true` | 启用 CPU 卸载（使用 `--offloading false` 或 `--offloading 0` 来禁用，如果 GPU 内存允许，禁用后速度会更快） |
 | `--group_offloading` | bool | 否 | `None` | 启用组卸载（默认：None，如果启用了 offloading 则自动启用。使用 `--group_offloading` 或 `--group_offloading true/1` 来启用，`--group_offloading false/0` 来禁用） |
+| `--overlap_group_offloading` | bool | 否 | `true` | 启用重叠组卸载（默认：true）。会显著增加 CPU 内存占用，但能够提速。使用 `--overlap_group_offloading` 或 `--overlap_group_offloading true/1` 来启用，`--overlap_group_offloading false/0` 来禁用 |
 | `--dtype` | str | 否 | `bf16` | Transformer 的数据类型：`bf16`（更快，内存占用更低）或 `fp32`（质量更好，速度更慢，内存占用更高） |
 | `--use_sageattn` | bool | 否 | `false` | 启用 SageAttention（使用 `--use_sageattn` 或 `--use_sageattn true/1` 来启用，`--use_sageattn false/0` 来禁用） |
 | `--sage_blocks_range` | str | 否 | `0-53` | SageAttention 块范围（例如：`0-5` 或 `0,1,2,3,4,5`） |

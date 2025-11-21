@@ -213,6 +213,7 @@ SPARSE_ATTN=true # Inference with sparse attention
 SAGE_ATTN=false # Inference with SageAttention
 MODEL_PATH=ckpts # Path to pretrained model
 REWRITE=true # Enable prompt rewriting
+OVERLAP_GROUP_OFFLOADING=true # Only valid when group offloading is enabled, significantly increases CPU memory usage but speeds up inference
 
 torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
   --prompt "$PROMPT" \
@@ -225,6 +226,7 @@ torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
   --use_sageattn $SAGE_ATTN \
   --rewrite $REWRITE \
   --output_path $OUTPUT_PATH \
+  --overlap_group_offloading $OVERLAP_GROUP_OFFLOADING \
   --save_pre_sr_video \
   --model_path $MODEL_PATH
 ```
@@ -250,6 +252,7 @@ torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
 | `--sparse_attn` | bool | No | `false` | Enable sparse attention for faster inference (~1.5-2x speedup, requires H-series GPUs, auto-enables CFG distilled, use `--sparse_attn` or `--sparse_attn true` to enable) |
 | `--offloading` | bool | No | `true` | Enable CPU offloading (use `--offloading false` or `--offloading 0` to disable for faster inference if GPU memory allows) |
 | `--group_offloading` | bool | No | `None` | Enable group offloading (default: None, automatically enabled if offloading is enabled. Use `--group_offloading` or `--group_offloading true/1` to enable, `--group_offloading false/0` to disable) |
+| `--overlap_group_offloading` | bool | No | `true` | Enable overlap group offloading (default: true). Significantly increases CPU memory usage but speeds up inference. Use `--overlap_group_offloading` or `--overlap_group_offloading true/1` to enable, `--overlap_group_offloading false/0` to disable |
 | `--dtype` | str | No | `bf16` | Data type for transformer: `bf16` (faster, lower memory) or `fp32` (better quality, slower, higher memory) |
 | `--use_sageattn` | bool | No | `false` | Enable SageAttention (use `--use_sageattn` or `--use_sageattn true/1` to enable, `--use_sageattn false/0` to disable) |
 | `--sage_blocks_range` | str | No | `0-53` | SageAttention blocks range (e.g., `0-5` or `0,1,2,3,4,5`) |

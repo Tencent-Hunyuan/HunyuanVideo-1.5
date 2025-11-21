@@ -93,6 +93,7 @@ def generate_video(args):
         transformer_version=transformer_version,
         enable_offloading=args.offloading,
         enable_group_offloading=args.group_offloading,
+        overlap_group_offloading=args.overlap_group_offloading,
         create_sr_pipeline=enable_sr,
         force_sparse_attn=args.sparse_attn,
         transformer_dtype=transformer_dtype,
@@ -217,6 +218,13 @@ def main():
         help='Enable group offloading (default: None, automatically enabled if offloading is enabled). '
              'Use --group_offloading or --group_offloading true/1 to enable, '
              '--group_offloading false/0 to disable'
+    )
+    parser.add_argument(
+        '--overlap_group_offloading', type=str_to_bool, nargs='?', const=True, default=True,
+        help='Enable overlap group offloading (default: true). '
+             'Significantly increases CPU memory usage but speeds up inference. '
+             'Use --overlap_group_offloading or --overlap_group_offloading true/1 to enable, '
+             '--overlap_group_offloading false/0 to disable'
     )
     parser.add_argument(
         '--dtype', type=str, default='bf16', choices=['bf16', 'fp32'],
