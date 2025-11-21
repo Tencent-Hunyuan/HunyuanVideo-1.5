@@ -162,6 +162,8 @@ pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-s
 
 ## 🧱 下载预训练模型
 
+> 💡 蒸馏模型和稀疏注意力模型即将发布，敬请期待。请关注 Hugging Face 模型卡片获取最新更新。
+
 在生成视频之前，请先下载预训练模型。详细说明请参考 [checkpoints-download.md](checkpoints-download.md)。
 
 ## 📝 提示词指南

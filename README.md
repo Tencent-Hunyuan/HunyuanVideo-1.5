@@ -162,6 +162,8 @@ Detailed installation instructions are available at [Flash Attention](https://gi
 
 ## 🧱 Download Pretrained Models
 
+> 💡 Distillation models and sparse attention models are still coming soon. Please stay tuned for the latest updates on the Hugging Face Model Card.
+
 Download the pretrained models before generating videos. Detailed instructions are available at [checkpoints-download.md](checkpoints-download.md).
 
 ## 📝 Prompt Guide
