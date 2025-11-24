@@ -29,6 +29,8 @@ HunyuanVideo-1.5 is a video generation model that delivers top-tier quality with
   <a href="https://github.com/Tencent-Hunyuan/HunyuanVideo-1.5/blob/main/assets/HunyuanVideo_1_5_Prompt_Handbook_EN.md" target="_blank"><img src=https://img.shields.io/badge/📚-PromptHandBook-blue.svg?logo=book height=22px></a> <br/>
   <a href="./ComfyUI/README.md" target="_blank"><img src=https://img.shields.io/badge/ComfyUI-blue.svg?logo=book height=22px></a>
   <a href="https://github.com/ModelTC/LightX2V" target="_blank"><img src=https://img.shields.io/badge/LightX2V-yellow.svg?logo=book height=22px></a>
+  <a href="https://tusi.cn/models/933574988890423836" target="_blank"><img src=https://img.shields.io/badge/吐司-purple.svg?logo=book height=22px></a>
+  <a href="https://tensor.art/models/933574988890423836" target="_blank"><img src=https://img.shields.io/badge/TensorArt-cyan.svg?logo=book height=22px></a>
 
 </div>
 
@@ -39,8 +41,8 @@ HunyuanVideo-1.5 is a video generation model that delivers top-tier quality with
 </p>
 
 ## 🔥🔥🔥 News
-👋 Nov 20, 2025: We release the inference code and model weights of HunyuanVideo-1.5.
-🚀 Latest: We now support cache inference, achieving approximately 2x speedup! Pull the latest code to experience it.
+* 🚀 Nov 24, 2025: We now support cache inference, achieving approximately 2x speedup! Pull the latest code to try it.
+* 👋 Nov 20, 2025: We release the inference code and model weights of HunyuanVideo-1.5.
 
 
 ## 🎥 Demo

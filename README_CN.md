@@ -29,7 +29,8 @@ HunyuanVideo-1.5作为一款轻量级视频生成模型，仅需83亿参数即�
   <a href="https://github.com/Tencent-Hunyuan/HunyuanVideo-1.5/blob/main/assets/HunyuanVideo_1_5_Prompt_Handbook_EN.md" target="_blank"><img src=https://img.shields.io/badge/📚-PromptHandBook-blue.svg?logo=book height=22px></a> <br/>
   <a href="./ComfyUI/README.md" target="_blank"><img src=https://img.shields.io/badge/ComfyUI-blue.svg?logo=book height=22px></a>
   <a href="https://github.com/ModelTC/LightX2V" target="_blank"><img src=https://img.shields.io/badge/LightX2V-yellow.svg?logo=book height=22px></a>
-
+  <a href="https://tusi.cn/models/933574988890423836" target="_blank"><img src=https://img.shields.io/badge/吐司-purple.svg?logo=book height=22px></a>
+  <a href="https://tensor.art/models/933574988890423836" target="_blank"><img src=https://img.shields.io/badge/TensorArt-cyan.svg?logo=book height=22px></a>
 </div>
 
 
@@ -39,8 +40,8 @@ HunyuanVideo-1.5作为一款轻量级视频生成模型，仅需83亿参数即�
 </p>
 
 ## 🔥🔥🔥 最新动态
-👋 2025年11月20日: 我们开源了 HunyuanVideo-1.5的代码和推理权重
-🚀 最新: 我们现已支持 cache 推理，可实现约两倍加速！请 pull 最新代码体验。
+* 🚀 Nov 24, 2025: 我们现已支持 cache 推理，可实现约两倍加速！请 pull 最新代码体验。
+* 👋 Nov 20, 2025: 我们开源了 HunyuanVideo-1.5的代码和推理权重
 
 ## 🎥 演示视频
 <div align="center">
