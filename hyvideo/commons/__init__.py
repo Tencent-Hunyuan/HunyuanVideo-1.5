@@ -89,12 +89,12 @@ PIPELINE_CONFIGS = {
     '720p_t2v_distilled_sparse': {
         'guidance_scale': 1.0,
         'embedded_guidance_scale': None,
-        'flow_shift': 7.0,
+        'flow_shift': 9.0,
     },
     '720p_i2v_distilled_sparse': {
         'guidance_scale': 1.0,
         'embedded_guidance_scale': None,
-        'flow_shift': 9.0,
+        'flow_shift': 7.0,
     },
 }
 

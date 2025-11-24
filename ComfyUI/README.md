@@ -52,14 +52,14 @@ Find workflow templates at:
 | 480p I2V | 6 | None | 5 | 50 |
 | 720p T2V | 6 | None | 9 | 50 |
 | 720p I2V | 6 | None | 7 | 50 |
-| 480p T2V Distilled | 1 | None | 5 | 50 |
-| 480p I2V Distilled | 1 | None | 5 | 50 |
-| 720p T2V Distilled | 1 | None | 9 | 50 |
-| 720p I2V Distilled | 1 | None | 7 | 50 |
-| 720p T2V Distilled Sparse | 1 | None | 7 | 50 |
-| 720p I2V Distilled Sparse | 1 | None | 9 | 50 |
-| 480→720 SR | 1 | None | 2 | 6 |
-| 720→1080 SR | 1 | None | 2 | 8 |
+| 480p T2V CFG Distilled | 1 | None | 5 | 50 |
+| 480p I2V CFG Distilled | 1 | None | 5 | 50 |
+| 720p T2V CFG Distilled | 1 | None | 9 | 50 |
+| 720p I2V CFG Distilled | 1 | None | 7 | 50 |
+| 720p T2V CFG Distilled Sparse | 1 | None | 9 | 50 |
+| 720p I2V CFG Distilled Sparse | 1 | None | 7 | 50 |
+| 480→720 SR Step Distilled | 1 | None | 2 | 6 |
+| 720→1080 SR Step Distilled | 1 | None | 2 | 8 |
 
 
 ### Prompt Writing Tips

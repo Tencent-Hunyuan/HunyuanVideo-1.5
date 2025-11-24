@@ -290,8 +290,8 @@ torchrun --nproc_per_node=$N_INFERENCE_GPU generate.py \
 | 480p I2V cfg 蒸馏 | 1 | None | 5 | 50 |
 | 720p T2V cfg 蒸馏 | 1 | None | 9 | 50 |
 | 720p I2V cfg 蒸馏 | 1 | None | 7 | 50 |
-| 720p T2V cfg 蒸馏稀疏 | 1 | None | 7 | 50 |
-| 720p I2V cfg 蒸馏稀疏 | 1 | None | 9 | 50 |
+| 720p T2V cfg 蒸馏稀疏 | 1 | None | 9 | 50 |
+| 720p I2V cfg 蒸馏稀疏 | 1 | None | 7 | 50 |
 | 480→720 超分 步数蒸馏 | 1 | None | 2 | 6 |
 | 720→1080 超分 步数蒸馏 | 1 | None | 2 | 8 |
 
