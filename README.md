@@ -60,6 +60,9 @@ If you develop/use HunyuanVideo-1.5 in your projects, welcome to let us know.
 
 - **LightX2V** - [LightX2V](https://github.com/ModelTC/LightX2V): A lightweight and efficient video generation framework that integrates HunyuanVideo-1.5, supporting multiple engineering acceleration techniques for fast inference.
 
+- **Wan2GP v9.62** - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP): WanGP is a very low VRAM app (as low 6 GB of VRAM for Hunyuan Video 1.5) supports Lora Accelerator for a 8 steps generation and offers tools to facilitate Video Generation.
+
+
 ## 📑 Open-source Plan
 - HunyuanVideo-1.5 (T2V/I2V)
   - [x] Inference Code and checkpoints

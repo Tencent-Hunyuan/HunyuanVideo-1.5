@@ -58,6 +58,9 @@ HunyuanVideo-1.5作为一款轻量级视频生成模型，仅需83亿参数即�
 
 - **LightX2V** - [LightX2V](https://github.com/ModelTC/LightX2V): 一个轻量级高效的视频生成框架，集成了 HunyuanVideo-1.5，支持多种工程加速技术以实现快速推理。
 
+- **Wan2GP v9.62** - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP): Wan2GP 是一款对显存要求非常低的应用（在 Hunyuan Video 1.5 下最低仅需 6GB 显存），支持 Lora 加速器实现 8 步生成，并且提供多种视频生成辅助工具。
+
+
 ## 📑 开源计划
 - HunyuanVideo-1.5 (文生视频/图生视频)
   - [x] 推理代码和模型权重
