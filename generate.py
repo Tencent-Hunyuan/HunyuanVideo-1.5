@@ -19,6 +19,7 @@ import os
 if 'PYTORCH_CUDA_ALLOC_CONF' not in os.environ:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
+import copy
 import datetime
 import json
 
@@ -27,6 +28,7 @@ import torch
 import argparse
 import einops
 import imageio
+from torch import distributed as dist
 
 from hyvideo.pipelines.hunyuan_video_pipeline import HunyuanVideo_1_5_Pipeline
 from hyvideo.commons.parallel_states import initialize_parallel_state
@@ -91,10 +93,13 @@ def str_to_bool(value):
 
 def generate_video(args):
 
-    initialize_infer_state(args)
+    infer_state = initialize_infer_state(args)
 
     if args.sparse_attn and args.use_sageattn:
         raise ValueError("sparse_attn and use_sageattn cannot be enabled simultaneously. Please enable only one of them.")
+    
+    if args.enable_torch_compile and args.enable_cache:
+        raise NotImplementedError("enable_torch_compile and enable_cache are not compatible yet.")
     
     task = 'i2v' if args.image_path else 't2v'
     
@@ -109,16 +114,58 @@ def generate_video(args):
     else:
         raise ValueError(f"Unsupported dtype: {args.dtype}. Must be 'bf16' or 'fp32'")
     
+    # Determine offloading settings
+    if args.group_offloading is None:
+        # Auto-detect based on offloading config
+        offloading_config = HunyuanVideo_1_5_Pipeline.get_offloading_config()
+        enable_offloading = offloading_config['enable_offloading']
+        enable_group_offloading = offloading_config['enable_group_offloading']
+    else:
+        enable_offloading = args.offloading
+        enable_group_offloading = args.group_offloading
+    
+    overlap_group_offloading = args.overlap_group_offloading
+    
+    # Determine device and transformer_init_device based on offloading settings
+    if enable_offloading:
+        device = torch.device('cpu')
+    else:
+        device = torch.device('cuda')
+    
+    if enable_group_offloading:
+        transformer_init_device = torch.device('cpu')
+    else:
+        transformer_init_device = device
+    
     pipe = HunyuanVideo_1_5_Pipeline.create_pipeline(
         pretrained_model_name_or_path=args.model_path,
         transformer_version=transformer_version,
-        enable_offloading=args.offloading,
-        enable_group_offloading=args.group_offloading,
-        overlap_group_offloading=args.overlap_group_offloading,
         create_sr_pipeline=enable_sr,
-        force_sparse_attn=args.sparse_attn,
         transformer_dtype=transformer_dtype,
+        device=device,
+        transformer_init_device=transformer_init_device,
     )
+    
+    loguru.logger.info(f"{enable_offloading=} {enable_group_offloading=} {overlap_group_offloading=}")
+    
+    pipe.apply_infer_optimization(
+        infer_state=infer_state,
+        enable_offloading=enable_offloading,
+        enable_group_offloading=enable_group_offloading,
+        overlap_group_offloading=overlap_group_offloading,
+    )
+    
+
+    # Apply optimizations to SR pipeline if exists
+    if enable_sr and hasattr(pipe, 'sr_pipeline'):
+        sr_infer_state = copy.deepcopy(infer_state)
+        sr_infer_state.enable_cache = False # SR pipeline does not require cache optimization yet
+        pipe.sr_pipeline.apply_infer_optimization(
+            infer_state=sr_infer_state,
+            enable_offloading=enable_offloading,
+            enable_group_offloading=enable_group_offloading,
+            overlap_group_offloading=overlap_group_offloading,
+        )
 
     extra_kwargs = {}
     if task == 'i2v':
@@ -332,6 +379,7 @@ def main():
     
     
     generate_video(args)
+    dist.destroy_process_group()
 
 
 if __name__ == '__main__':

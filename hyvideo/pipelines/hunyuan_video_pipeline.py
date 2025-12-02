@@ -47,7 +47,6 @@ from hyvideo.commons import (
     get_gpu_memory,
     get_rank,
     is_flash3_available,
-    is_sparse_attn_supported,
     is_angelslim_available,
 )
 from hyvideo.commons.parallel_states import get_parallel_state
@@ -72,7 +71,7 @@ from hyvideo.utils.data_utils import (
 from hyvideo.utils.multitask_utils import (
     merge_tensor_by_mask,
 )
-from hyvideo.commons.infer_state import get_infer_state
+from hyvideo.commons.infer_state import InferState
 
 from .pipeline_utils import retrieve_timesteps, rescale_noise_cfg
 
@@ -1045,6 +1044,8 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
                 width = int(width)
                 height = int(height)
                 height, width = self.get_closest_resolution_given_original_size((width, height), self.ideal_resolution)
+            else:
+                raise ValueError("ideal_resolution is not set")
 
         latent_target_length, latent_height, latent_width = self.get_latent_size(video_length, height, width)
         n_tokens = latent_target_length * latent_height * latent_width
@@ -1071,9 +1072,9 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
                 f"{'-' * 60}\n"
                 f"User Prompt:               {user_prompt}\n"
                 f"Rewritten Prompt:          {prompt if prompt_rewrite else '<disabled>'}\n"
-                f"Aspect Ratio:              {aspect_ratio}\n"
+                f"Aspect Ratio:              {aspect_ratio if task_type == 't2v' else f'{width}:{height}'}\n"
                 f"Video Length:              {video_length}\n"
-                f"Reference Image:           {reference_image}\n"
+                f"Reference Image:           {user_reference_image} {reference_image.size}\n"
                 f"Guidance Scale:            {guidance_scale}\n"
                 f"Guidance Embedded Scale:   {embedded_guidance_scale}\n"
                 f"Shift:                     {flow_shift}\n"
@@ -1186,7 +1187,6 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
         cache_helper = getattr(self, 'cache_helper', None)
         if cache_helper is not None:
             cache_helper.clear_states()
-            assert num_inference_steps == get_infer_state().total_steps
 
         with self.progress_bar(total=num_inference_steps) as progress_bar, auto_offload_model(self.transformer, self.execution_device, enabled=self.enable_offloading):
             for i, t in enumerate(timesteps):
@@ -1328,6 +1328,82 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
     def use_meanflow(self):
         return self.transformer.config.use_meanflow
 
+    def apply_infer_optimization(
+        self,
+        infer_state: Optional[InferState] = None,
+        enable_offloading: bool = False,
+        enable_group_offloading: bool = False,
+        overlap_group_offloading: bool = True,
+    ):
+        """
+        Apply inference optimizations to transformer based on infer_state.
+        
+        Args:
+            infer_state: Optional InferState object containing optimization settings.
+            enable_offloading: Whether to enable CPU offloading.
+            enable_group_offloading: Whether to enable group offloading.
+            overlap_group_offloading: Whether to use overlapping group offloading.
+        """
+        if infer_state is not None:
+            # Apply torch compile if enabled
+            if infer_state.enable_torch_compile:
+                self.transformer.enable_torch_compile = True
+                # Also set for all blocks
+                for block in self.transformer.double_blocks:
+                    block.enable_torch_compile = True
+                for block in self.transformer.single_blocks:
+                    block.enable_torch_compile = True
+            
+            # Apply sageattn if enabled
+            if infer_state.enable_sageattn:
+                self.transformer.set_attn_mode('sageattn')
+            
+            # Apply cache if enabled
+            if infer_state.enable_cache:
+                if not is_angelslim_available():
+                    raise RuntimeError("Please install angelslim==0.2.1 via `pip install angelslim==0.2.1` to enable cache.")
+                from angelslim.compressor.diffusion import DeepCacheHelper, TeaCacheHelper, TaylorCacheHelper
+                no_cache_steps = list(range(0, infer_state.cache_start_step)) + list(range(infer_state.cache_start_step, infer_state.cache_end_step, infer_state.cache_step_interval)) + list(range(infer_state.cache_end_step, infer_state.total_steps))
+                cache_type = infer_state.cache_type
+                if cache_type == 'deepcache':
+                    no_cache_block_id = {"double_blocks": infer_state.no_cache_block_id}
+                    self.cache_helper = DeepCacheHelper(
+                        double_blocks=self.transformer.double_blocks,
+                        no_cache_steps=no_cache_steps,
+                        no_cache_block_id=no_cache_block_id,
+                    )
+                elif cache_type == 'teacache':
+                    self.cache_helper = TeaCacheHelper(
+                        double_blocks=self.transformer.double_blocks,
+                        no_cache_steps=no_cache_steps,
+                    )
+                elif cache_type == 'taylorcache':
+                    self.cache_helper = TaylorCacheHelper(
+                        double_blocks=self.transformer.double_blocks,
+                        no_cache_steps=no_cache_steps,
+                    )
+                else:
+                    raise ValueError(f"Unknown cache type: {cache_type}. Only 'deepcache', 'teacache', 'taylorcache' are supported.")
+                self.cache_helper.enable()
+            else:
+                self.cache_helper = None
+        else:
+            self.cache_helper = None
+        
+        # Set enable_offloading
+        self.enable_offloading = enable_offloading
+        
+        # Apply group offloading if enabled
+        if enable_group_offloading:
+            assert enable_offloading, "enable_group_offloading requires enable_offloading to be True"
+            group_offloading_kwargs = {
+                'onload_device': torch.device('cuda'),
+                'num_blocks_per_group': 1 if overlap_group_offloading else 4,
+            }
+            if overlap_group_offloading:
+                group_offloading_kwargs['use_stream'] = True
+            self.transformer.enable_group_offload(**group_offloading_kwargs)
+
     @classmethod
     def load_sr_transformer_upsampler(cls, cached_folder, sr_version, transformer_dtype=torch.bfloat16, device=None):
         transformer = HunyuanVideo_1_5_DiffusionTransformer.from_pretrained(
@@ -1377,7 +1453,7 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
         return transformer_version
 
     @classmethod
-    def create_pipeline(cls, pretrained_model_name_or_path, transformer_version, create_sr_pipeline=False, force_sparse_attn=False, transformer_dtype=torch.bfloat16, enable_offloading=None, enable_group_offloading=None, overlap_group_offloading=True, device=None, **kwargs):
+    def create_pipeline(cls, pretrained_model_name_or_path, transformer_version, create_sr_pipeline=False, transformer_dtype=torch.bfloat16, device=None, transformer_init_device=None, **kwargs):
         # use snapshot download here to get it working from from_pretrained
 
         if not os.path.isdir(pretrained_model_name_or_path):
@@ -1393,23 +1469,10 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
         else:
             cached_folder = pretrained_model_name_or_path
 
-        if enable_group_offloading is None:
-            offloading_config = cls.get_offloading_config()
-            enable_offloading = offloading_config['enable_offloading']
-            enable_group_offloading = offloading_config['enable_group_offloading']
-
-
-        if enable_offloading:
-            # Assuming the user does not have sufficient GPU memory, we initialize the models on CPU
-            device = torch.device('cpu')
-        else:
-            if device is None:
-                device = torch.device('cuda')
-
-        if enable_group_offloading:
-            # Assuming the user does not have sufficient GPU memory, we initialize the models on CPU
-            transformer_init_device = torch.device('cpu')
-        else:
+        if device is None:
+            device = torch.device('cuda')
+        
+        if transformer_init_device is None:
             transformer_init_device = device
 
         supported_transformer_version = os.listdir(os.path.join(cached_folder, "transformer"))
@@ -1429,70 +1492,9 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
         vae.set_tile_sample_min_size(vae_inference_config['sample_size'], vae_inference_config['tile_overlap_factor'])
         scheduler = FlowMatchDiscreteScheduler.from_pretrained(os.path.join(cached_folder, "scheduler"))
 
-        infer_state = get_infer_state()
-        if infer_state.enable_sageattn:
-            transformer.set_attn_mode('sageattn')
-
-        if force_sparse_attn:
-            if not is_sparse_attn_supported():
-                raise RuntimeError(f"Current GPU is {torch.cuda.get_device_properties(0).name}, which does not support sparse attention.")
-            if transformer.config.attn_mode != 'flex-block-attn':
-                loguru.logger.warning(
-                    f"The transformer loaded ({transformer_version}) is not trained with sparse attention. Forcing to use sparse attention may lead to artifacts in the generated video."
-                    f"To enable sparse attention, we recommend loading `{transformer_version}_distilled_sparse` instead."
-                )
-            transformer.set_attn_mode('flex-block-attn')
-
         byt5_kwargs, prompt_format = cls._load_byt5(cached_folder, True, 256, device=device)
         text_encoder, text_encoder_2 = cls._load_text_encoders(cached_folder, device=device)
         vision_encoder = cls._load_vision_encoder(cached_folder, device=device)
-
-        group_offloading_kwargs = {
-            'onload_device': torch.device('cuda'),
-            'num_blocks_per_group': 4,
-        }
-
-
-        if overlap_group_offloading:
-            # Using streams is only supported for num_blocks_per_group=1
-            group_offloading_kwargs['num_blocks_per_group'] = 1
-            group_offloading_kwargs['use_stream'] = True
-
-
-        loguru.logger.info(f"{enable_offloading=} {enable_group_offloading=} {overlap_group_offloading=}")
-
-        if infer_state.enable_cache:
-            if not is_angelslim_available():
-                raise RuntimeError("Please install angelslim==0.2.1 via `pip install angelslim==0.2.1` to enable cache.")
-            from angelslim.compressor.diffusion import DeepCacheHelper, TeaCacheHelper, TaylorCacheHelper
-            no_cache_steps = list(range(0, infer_state.cache_start_step)) + list(range(infer_state.cache_start_step, infer_state.cache_end_step, infer_state.cache_step_interval)) + list(range(infer_state.cache_end_step, infer_state.total_steps))
-            cache_type = infer_state.cache_type
-            if cache_type == 'deepcache':
-                no_cache_block_id = {"double_blocks":infer_state.no_cache_block_id}
-                cache_helper = DeepCacheHelper(
-                    double_blocks=transformer.double_blocks,
-                    no_cache_steps=no_cache_steps,
-                    no_cache_block_id=no_cache_block_id,
-                )
-            elif cache_type == 'teacache':
-                cache_helper = TeaCacheHelper(
-                    double_blocks=transformer.double_blocks,
-                    no_cache_steps=no_cache_steps,
-                )
-            elif cache_type == 'taylorcache':
-                cache_helper = TaylorCacheHelper(
-                    double_blocks=transformer.double_blocks,
-                    no_cache_steps=no_cache_steps,
-                )
-            else:
-                raise ValueError(f"Unknown cache type: {cache_type}. Only 'deepcache', 'teacache', 'taylorcache' are supported.")
-            cache_helper.enable()
-        else:
-            cache_helper = None
-
-        if enable_group_offloading:
-            assert enable_offloading
-            transformer.enable_group_offload(**group_offloading_kwargs)
 
         pipeline = cls(
             vae=vae,
@@ -1507,21 +1509,14 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             prompt_format=prompt_format,
             execution_device='cuda',
             vision_encoder=vision_encoder,
-            enable_offloading=enable_offloading,
+            enable_offloading=False,
             **PIPELINE_CONFIGS[transformer_version],
         )
-        if cache_helper is not None:
-            pipeline.cache_helper = cache_helper
 
         if create_sr_pipeline:
             sr_version = TRANSFORMER_VERSION_TO_SR_VERSION[transformer_version]
             sr_pipeline = pipeline.create_sr_pipeline(cached_folder, sr_version, transformer_dtype=transformer_dtype, device=device)
             pipeline.sr_pipeline = sr_pipeline
-            if enable_group_offloading:
-                sr_pipeline.transformer.enable_group_offload(**group_offloading_kwargs)
-
-            if infer_state.enable_sageattn:
-                sr_pipeline.transformer.set_attn_mode('sageattn')
 
 
         return pipeline

@@ -105,6 +105,7 @@ class MMDoubleStreamBlock(nn.Module):
         self.txt_mlp = MLP(hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs)
 
         self.hybrid_seq_parallel_attn = None
+        self.enable_torch_compile = False
 
     def enable_deterministic(self):
         self.deterministic = True
@@ -396,6 +397,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
         self.use_attention_mask = use_attention_mask
         self.text_projection = text_projection
         self.attn_mode = attn_mode
+        self.enable_torch_compile = False
         self.text_pool_type = text_pool_type
         self.text_states_dim = text_states_dim
         self.text_states_dim_2 = text_states_dim_2
