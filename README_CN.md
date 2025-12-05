@@ -40,7 +40,7 @@ HunyuanVideo-1.5作为一款轻量级视频生成模型，仅需83亿参数即�
 </p>
 
 ## 🔥🔥🔥 最新动态
-* 🚀 Dec 05, 2025: **新模型发布**：我们现已发布 [480p I2V 步数蒸馏模型](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/480p_i2v_step_distilled)，建议使用 8 或 12 步生成视频！在 RTX 4090 上，端到端生成耗时减少 75%，单卡 RTX 4090 可在 75 秒内生成视频。步数蒸馏模型在保持与原模型相当质量的同时实现了显著的加速。详细的质量对比请参见[步数蒸馏对比文档](./assets/step_distillation_comparison.md)。如需更快的生成速度，您也可以尝试使用4步推理（速度更快，质量略有下降）。**启用步数蒸馏模型，请运行 `generate.py` 并使用 `--enable_step_distill` 参数。** 详细的使用说明请参见[使用方法](#-使用方法)。 🔥🔥🔥🆕
+* 🚀 Dec 05, 2025: **新模型发布**：我们现已发布 [480p I2V 步数蒸馏模型](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/480p_i2v_step_distilled)，建议使用 8 或 12 步生成视频！在 RTX 4090 上，端到端生成耗时减少 75%，单卡 RTX 4090 可在 **75 秒**内生成视频。步数蒸馏模型在保持与原模型相当质量的同时实现了显著的加速。详细的质量对比请参见[步数蒸馏对比文档](./assets/step_distillation_comparison.md)。如需更快的生成速度，您也可以尝试使用4步推理（速度更快，质量略有下降）。**启用步数蒸馏模型，请运行 `generate.py` 并使用 `--enable_step_distill` 参数。** 详细的使用说明请参见[使用方法](#-使用方法)。 🔥🔥🔥🆕
 * 📚 Dec 05, 2025: **训练代码已发布**：我们现已开源 HunyuanVideo-1.5 的完整训练代码！训练脚本（`train.py`）提供了完整的训练流程，支持分布式训练、FSDP、context parallel、梯度检查点等功能。HunyuanVideo-1.5 使用 Muon 优化器进行训练，我们在[训练](#-训练)部分已开源。**如果您希望继续训练我们的模型，或使用 LoRA 进行微调，请使用 Muon 优化器。** 详细使用说明请参见[训练](#-训练)部分。 🔥🔥🔥🆕
 * 🎉 **Diffusers 支持**：HunyuanVideo-1.5 现已支持 Hugging Face Diffusers！查看我们的 [Diffusers 集合](https://huggingface.co/collections/hunyuanvideo-community/hunyuanvideo-15) 以便轻松集成。 🔥🔥🔥🆕
 * 🚀 Nov 27, 2025: 我们现已支持 cache 推理（deepcache, teacache, taylorcache），可极大加速推理！请 pull 最新代码体验。 🔥🔥🔥🆕 
