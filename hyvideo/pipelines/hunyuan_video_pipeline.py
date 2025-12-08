@@ -1349,15 +1349,12 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             overlap_group_offloading: Whether to use overlapping group offloading.
         """
         if infer_state is not None:
-            # Apply torch compile if enabled
+
             if infer_state.enable_torch_compile:
-                self.transformer.enable_torch_compile = True
-                # Also set for all blocks
+                # block-wise compile
                 for block in self.transformer.double_blocks:
-                    block.enable_torch_compile = True
-                for block in self.transformer.single_blocks:
-                    block.enable_torch_compile = True
-            
+                    block.forward = torch.compile(block.forward)
+
             # Apply sageattn if enabled
             if infer_state.enable_sageattn:
                 self.transformer.set_attn_mode('sageattn')

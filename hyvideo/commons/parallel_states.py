@@ -42,6 +42,14 @@ class ParallelDims:
         )
         self.world_mesh = mesh
         self.fsdp_mesh = mesh['dp', 'sp']
+
+        if self.sp_enabled:
+            self.sp_rank = mesh['sp'].get_local_rank()
+            self.sp_group = mesh['sp'].get_group()
+        else:
+            self.sp_rank = dist.get_rank()
+            self.sp_group = None
+
         return mesh
 
     @property
@@ -49,19 +57,8 @@ class ParallelDims:
         return self.sp > 1
 
     @property
-    def sp_group(self):
-        return self.world_mesh['sp'].get_group()
-
-    @property
     def sp_mesh(self):
         return self.world_mesh['sp']
-
-    @property
-    def sp_rank(self):
-        if self.sp_enabled:
-            return self.world_mesh['sp'].get_local_rank()
-        else:
-            return dist.get_rank()
 
     @property
     def dp_enabled(self):

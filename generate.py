@@ -122,8 +122,8 @@ def generate_video(args):
     if args.sparse_attn and args.use_sageattn:
         raise ValueError("sparse_attn and use_sageattn cannot be enabled simultaneously. Please enable only one of them.")
     
-    if args.enable_torch_compile and args.enable_cache:
-        raise NotImplementedError("enable_torch_compile and enable_cache are not compatible yet.")
+    # if args.enable_torch_compile:
+    #     torch._logging.set_logs(graph_code=True)
     
     if args.enable_step_distill and args.enable_cache:
         raise ValueError("Enabling both step distilled model and cache will lead to performance degradation.")

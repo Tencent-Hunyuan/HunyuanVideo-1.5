@@ -281,6 +281,8 @@ class _AllGather(torch.autograd.Function):
         return grad_input, None, None
 
 
+# https://github.com/pytorch/pytorch/issues/138795
+@torch.compiler.disable
 def all_gather(input_: torch.Tensor, dim: int = 1, group=None):
     """Performs an all-gather operation on the input tensor along the specified dimension.
 

@@ -36,7 +36,6 @@ from .modules.modulate_layers import ModulateDiT, modulate, apply_gate
 from .modules.token_refiner import SingleTokenRefiner
 
 from hyvideo.utils.communications import all_gather
-from hyvideo.utils.infer_utils import torch_compile_wrapper
 from hyvideo.models.text_encoders.byT5 import ByT5Mapper
 from hyvideo.commons.parallel_states import get_parallel_state
 
@@ -105,7 +104,6 @@ class MMDoubleStreamBlock(nn.Module):
         self.txt_mlp = MLP(hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs)
 
         self.hybrid_seq_parallel_attn = None
-        self.enable_torch_compile = False
 
     def enable_deterministic(self):
         self.deterministic = True
@@ -113,7 +111,6 @@ class MMDoubleStreamBlock(nn.Module):
     def disable_deterministic(self):
         self.deterministic = False
 
-    @torch_compile_wrapper()
     def forward(
         self,
         img: torch.Tensor,
@@ -397,7 +394,6 @@ class HunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
         self.use_attention_mask = use_attention_mask
         self.text_projection = text_projection
         self.attn_mode = attn_mode
-        self.enable_torch_compile = False
         self.text_pool_type = text_pool_type
         self.text_states_dim = text_states_dim
         self.text_states_dim_2 = text_states_dim_2
