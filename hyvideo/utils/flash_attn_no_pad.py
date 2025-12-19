@@ -84,6 +84,9 @@ def flash_attn_no_pad_v3(
         causal=causal,
         deterministic=deterministic
     )
+    if isinstance(output_unpad, tuple):
+        # output, softmax_lse
+        output_unpad = output_unpad[0]
     
     output = rearrange(
         pad_input(rearrange(output_unpad, "nnz h d -> nnz (h d)"), indices, batch_size, seqlen),
