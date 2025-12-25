@@ -434,20 +434,20 @@ The training script (`train.py`) provides a complete training pipeline for Hunyu
 
 #### 1. Implement Your DataLoader
 
-Replace the `create_dummy_dataloader()` function in `train.py` with your own implementation. Your dataloader should return batches with the following format:
+Replace the `create_dummy_dataloader()` function in `train.py` with your own implementation. Your dataset's `__getitem__` method should return a single sample.
 
 - **Required fields:**
-  - `"pixel_values"`: `torch.Tensor` - Video: `[B, C, F, H, W]` or Image: `[B, C, H, W]`
+  - `"pixel_values"`: `torch.Tensor` - Video: `[C, F, H, W]` or Image: `[C, H, W]`
     - Pixel values must be in range `[-1, 1]` 
     - Note: For video data, temporal dimension F must be `4n+1` (e.g., 1, 5, 9, 13, 17, ...)
-  - `"text"`: `List[str]` - Text prompts for each sample
+  - `"text"`: `str` - Text prompt for this sample
   - `"data_type"`: `str` - `"video"` or `"image"`
 
 - **Optional fields (for performance optimization):**
   - `"latents"`: Pre-encoded VAE latents (skips VAE encoding for faster training)
   - `"byt5_text_ids"` and `"byt5_text_mask"`: Pre-tokenized byT5 inputs
 
-See the `create_dummy_dataloader()` function in `train.py` for detailed batch format documentation.
+See the `create_dummy_dataloader()` function in `train.py` for detailed format documentation.
 
 #### 2. Run Training
 

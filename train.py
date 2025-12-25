@@ -22,15 +22,15 @@ This script provides a complete training pipeline for HunyuanVideo-1.5 model.
 Quick Start:
 1. Implement your own dataloader:
    - Replace the `create_dummy_dataloader()` function with your own implementation
-   - Your dataloader should return batches with the following format:
+   - Your dataset's __getitem__ method should return a single sample:
      * "pixel_values": torch.Tensor - Video: [C, F, H, W] or Image: [C, H, W]
        Pixel values must be in range [-1, 1] 
        Note: For video data, temporal dimension F must be 4n+1 (e.g., 1, 5, 9, 13, 17, ...)
-     * "text": List[str] - Text prompts for each sample
+     * "text": str - Text prompt for this sample
      * "data_type": str - "video" or "image"
      * Optional: "latents" - Pre-encoded VAE latents for faster training
      * Optional: "byt5_text_ids" and "byt5_text_mask" - Pre-tokenized byT5 inputs
-   - See `create_dummy_dataloader()` function for detailed batch format documentation
+   - See `create_dummy_dataloader()` function for detailed format documentation
 
 2. Configure training parameters:
    - Set `--pretrained_model_root` to your pretrained model path
@@ -49,7 +49,7 @@ Quick Start:
 5. Resume training:
    - Use `--resume_from_checkpoint <checkpoint_dir>` to resume from a saved checkpoint
 
-For detailed batch format requirements, see the docstring of `create_dummy_dataloader()` function.
+For detailed format requirements, see the docstring of `create_dummy_dataloader()` function.
 """
 
 import os
@@ -1007,41 +1007,38 @@ def create_dummy_dataloader(config: TrainingConfig):
     """
     Create a dummy dataloader for testing.
     
-    Note: This is a placeholder - users should implement their own dataloader
-    that loads actual video/image data. The dataloader should return batches with
-    the following format:
+    Note: This is a placeholder - users should implement their own dataset and dataloader
+    that loads actual video/image data.
     
-    Required fields:
+    Required fields for Dataset __getitem__:
     - "pixel_values": torch.Tensor
-        * For video: shape [B, C, F, H, W] where F is the number of frames
-        * For image: shape [B, C, H, W] (will be automatically expanded to [B, C, 1, H, W])
+        * For video: shape [C, F, H, W] where F is the number of frames
+        * For image: shape [C, H, W]
         * Pixel values must be in range [-1, 1]
         * Data type: torch.float32
         * Note: For video data, temporal dimension F must be 4n+1 (e.g., 1, 5, 9, 13, 17, 21, ...)
           to satisfy VAE requirements. The dataset should ensure this before returning data.
     
-    - "text": List[str]
-        * List of text prompts, one per sample in the batch
-        * Length should match batch size B
+    - "text": str
+        * Text prompt for this sample
     
     - "data_type": str
         * "video" for video data (supports both t2v and i2v tasks based on i2v_prob)
         * "image" for image data (always uses t2v task)
-        * Can be a single string for the whole batch, or a list of strings (one per sample)
     
     Optional fields (for performance optimization):
-    - "latents": torch.Tensor, shape [B, C_latent, F, H_latent, W_latent]
+    - "latents": torch.Tensor, shape [C_latent, F, H_latent, W_latent]
         * Pre-encoded VAE latents. If provided, pixel_values will be ignored and VAE encoding
           will be skipped, significantly speeding up training.
         * Should be in the same format as VAE encoder output (after scaling_factor applied)
         * Temporal dimension F must still be 4n+1 for video data
     
     Optional fields (for byT5 text encoding):
-    - "byt5_text_ids": Optional[torch.Tensor], shape [B, seq_len]
+    - "byt5_text_ids": Optional[torch.Tensor], shape [seq_len]
         * Pre-tokenized byT5 token IDs. If provided, will be used directly.
         * If not provided, text will be tokenized on-the-fly.
     
-    - "byt5_text_mask": Optional[torch.Tensor], shape [B, seq_len]
+    - "byt5_text_mask": Optional[torch.Tensor], shape [seq_len]
         * Attention mask for byT5 tokens (1 for valid tokens, 0 for padding)
         * Required if byt5_text_ids is provided
     
@@ -1050,10 +1047,10 @@ def create_dummy_dataloader(config: TrainingConfig):
       based on config.i2v_prob probability
     - For "image" data: always uses t2v task
     
-    Example batch format:
+    Example sample format (what dataset __getitem__ should return):
     {
         "pixel_values": torch.Tensor([3, 121, 480, 848]),  # Video example
-        "text": ["A cat playing", "A dog running"],
+        "text": "A cat playing",
         "data_type": "video",
         "byt5_text_ids": torch.Tensor([256]),  # Optional
         "byt5_text_mask": torch.Tensor([256]),  # Optional
@@ -1062,7 +1059,7 @@ def create_dummy_dataloader(config: TrainingConfig):
     Or with pre-encoded latents (faster):
     {
         "latents": torch.Tensor([32, 31, 30, 53]),  # Pre-encoded VAE latents
-        "text": ["A cat playing", "A dog running"],
+        "text": "A cat playing",
         "data_type": "video",
     }
     """
