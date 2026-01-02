@@ -149,6 +149,7 @@ class TrainingConfig:
     enable_fsdp: bool = True  # Enable FSDP for distributed training
     enable_gradient_checkpointing: bool = True  # Enable gradient checkpointing
     sp_size: int = 8  # Sequence parallelism size (must divide world_size evenly)
+    dp_replicate: int = 1  # Data parallelism replicate size (must divide world_size evenly)
     
     # Data configuration
     batch_size: int = 1
@@ -276,6 +277,61 @@ def timestep_transform(timesteps: torch.Tensor, T: int, shift: float = 1.0) -> t
     return timesteps_transformed * T
 
 
+def is_src(src, group_src, group):
+    assert src is not None or group_src is not None
+    assert src is None or group_src is None
+    if src is not None:
+        return dist.get_rank() == src
+    if group_src is not None:
+        return dist.get_rank() == dist.get_global_rank(group, group_src)
+    raise RuntimeError("src and group_src cannot be both None")
+
+def broadcast_object(
+        obj,
+        src = None,
+        group = None,
+        device = None,
+        group_src = None,
+):
+    kwargs = dict(
+        src=src,
+        group_src=group_src,
+        group=group,
+        device=device,
+    )
+    buffer = [obj] if is_src(src, group_src, group) else [None]
+
+    dist.broadcast_object_list(buffer, **kwargs)
+    return buffer[0]
+
+def broadcast_tensor(
+        tensor,
+        src  = None,
+        group = None,
+        async_op: bool = False,
+        group_src = None,
+):
+    """shape and dtype safe broadcast of tensor"""
+    kwargs = dict(
+        src=src,
+        group_src=group_src,
+        group=group,
+        async_op=async_op,
+    )
+    if is_src(src, group_src, group):
+        tensor = tensor.cuda().contiguous()
+    if is_src(src, group_src, group):
+        shape, dtype = tensor.shape, tensor.dtype
+    else:
+        shape, dtype = None, None
+    shape = broadcast_object(shape, src=src, group_src=group_src, group=group)
+    dtype = broadcast_object(dtype, src=src, group_src=group_src, group=group)
+
+    buffer = tensor if is_src(src, group_src, group) else torch.empty(shape, device='cuda', dtype=dtype)
+    dist.broadcast(buffer, **kwargs)
+    return buffer
+
+
 def sync_tensor_for_sp(tensor: torch.Tensor, sp_group) -> torch.Tensor:
     """
     Sync tensor within sequence parallel group.
@@ -285,12 +341,9 @@ def sync_tensor_for_sp(tensor: torch.Tensor, sp_group) -> torch.Tensor:
         return tensor
     if not isinstance(tensor, torch.Tensor):
         obj_list = [tensor]
-        dist.broadcast_object_list(obj_list, src=0, group=sp_group)
+        dist.broadcast_object_list(obj_list, group_src=0, group=sp_group)
         return obj_list[0]
-    dist.broadcast(tensor, src=0, group=sp_group)
-    return tensor
-
-
+    return broadcast_tensor(tensor, group_src=0, group=sp_group)
 
 
 class HunyuanVideoTrainer:
@@ -320,7 +373,7 @@ class HunyuanVideoTrainer:
                 f"world_size % sp_size = {self.world_size % config.sp_size}"
             )
         
-        initialize_parallel_state(sp=config.sp_size)
+        initialize_parallel_state(sp=config.sp_size, dp_replicate=config.dp_replicate)
         torch.cuda.set_device(self.local_rank)
         self.parallel_state = get_parallel_state()
         self.dp_rank = self.parallel_state.world_mesh['dp'].get_local_rank()
@@ -752,9 +805,6 @@ class HunyuanVideoTrainer:
         target = inputs["target"].to(dtype=model_pred.dtype)
         loss = nn.functional.mse_loss(model_pred, target)
         
-        if self.sp_enabled:
-            loss = sync_tensor_for_sp(loss, self.sp_group)
-        
         loss = loss / self.config.gradient_accumulation_steps
         loss.backward()
         
@@ -1074,14 +1124,18 @@ def create_dummy_dataloader(config: TrainingConfig):
         def __getitem__(self, idx):
             # Video: temporal dimension must be 4n+1, using 17 frames
             # Generate data in range [-1, 1]
-            data = torch.rand(3, 121, 480, 848) * 2.0 - 1.0  # [0, 1] -> [-1, 1]
+
+            resolution = (121, 480, 848)
+            latent_resolution = [(resolution[0] - 1) // 4 + 1, resolution[1] // 16, resolution[2] // 16]
+
+            data = torch.rand(3, *resolution) * 2.0 - 1.0  # [0, 1] -> [-1, 1]
             data_type = "video"
 
             return {
                 "pixel_values": data,
                 "text": "A sample prompt",
                 "data_type": data_type,
-                "latents": torch.randn(32, 31, 30, 53),
+                "latents": torch.randn(32, *latent_resolution),
                 # "byt5_text_ids": torch.zeros((256), dtype=torch.int64),
                 # "byt5_text_mask": torch.zeros((256), dtype=torch.int64),
             }
@@ -1149,6 +1203,10 @@ def main():
         help="Sequence parallelism size (default: 1). Must evenly divide world_size. "
              "For example, if world_size=8, valid sp_size values are 1, 2, 4, 8."
     )
+    parser.add_argument(
+        "--dp_replicate", type=int, default=1,
+        help="Data parallelism replicate size (default: 1). "
+    )
     
     # Validation parameters
     parser.add_argument("--validation_interval", type=int, default=100, help="Run validation every N steps (default: 100)")
@@ -1199,6 +1257,8 @@ def main():
         enable_fsdp=args.enable_fsdp,
         enable_gradient_checkpointing=args.enable_gradient_checkpointing,
         sp_size=args.sp_size,
+        use_muon=args.use_muon,
+        dp_replicate=args.dp_replicate,
         validation_interval=args.validation_interval,
         validation_prompts=args.validation_prompts,
         train_timestep_shift=args.train_timestep_shift,

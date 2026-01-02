@@ -24,6 +24,7 @@ from torch.distributed.device_mesh import init_device_mesh
 class ParallelDims:
     sp: int = 1
     world_size: int = -1
+    dp_replicate: int = 1
 
     def __post_init__(self):
         if self.world_size == -1:
@@ -34,14 +35,25 @@ class ParallelDims:
         self.build_mesh("cuda")
 
     def build_mesh(self, device_type):
+        if self.dp_replicate == -1:
+            assert self.world_size % 8 == 0, "world_size must be divisible by 8 for dp_replicate==-1"
+            self.dp_replicate = self.world_size // 8
         assert self.world_size % self.sp == 0, "world_size must be divisible by sp"
+        assert self.world_size % self.dp_replicate == 0, "world_size must be divisible by dp_replicate"
+
+        fsdp_shard = self.world_size // self.dp_replicate 
+
         mesh = init_device_mesh(
             device_type,
             [self.world_size // self.sp, self.sp],
             mesh_dim_names=["dp", "sp"]
         )
         self.world_mesh = mesh
-        self.fsdp_mesh = mesh['dp', 'sp']
+        self.fsdp_mesh = init_device_mesh(
+            device_type, 
+            [self.dp_replicate, fsdp_shard], 
+            mesh_dim_names=["dp_replicate", "fsdp_shard"]
+        )
 
         if self.sp_enabled:
             self.sp_rank = mesh['sp'].get_local_rank()
@@ -68,9 +80,10 @@ __parallel_dims = None
 
 def initialize_parallel_state(
     sp: int = 1,
+    dp_replicate: int = 1,
 ):
     global __parallel_dims
-    __parallel_dims = ParallelDims(sp=sp)
+    __parallel_dims = ParallelDims(sp=sp, dp_replicate=dp_replicate)
     return __parallel_dims
 
 def get_parallel_state():
