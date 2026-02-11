@@ -206,9 +206,9 @@ Download the pretrained models before generating videos. Detailed instructions a
 |HunyuanVideo-1.5-480P-I2V-step-distill |[480P-I2V-step-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/480p_i2v_step_distilled) |
 |HunyuanVideo-1.5-720P-T2V|[720P-T2V](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_t2v) |
 |HunyuanVideo-1.5-720P-I2V |[720P-I2V](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v) |
-|HunyuanVideo-1.5-720P-T2V-cfg-distill| Comming soon |
+|HunyuanVideo-1.5-720P-T2V-cfg-distill| Coming soon |
 |HunyuanVideo-1.5-720P-I2V-cfg-distill |[720P-I2V-cfg-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v_distilled) |
-|HunyuanVideo-1.5-720P-T2V-sparse-cfg-distill| Comming soon |
+|HunyuanVideo-1.5-720P-T2V-sparse-cfg-distill| Coming soon |
 |HunyuanVideo-1.5-720P-I2V-sparse-cfg-distill |[720P-I2V-sparse-cfg-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v_distilled_sparse) |
 |HunyuanVideo-1.5-720P-sr-step-distill |[720P-sr](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_sr_distilled) |
 |HunyuanVideo-1.5-1080P-sr-step-distill |[1080P-sr](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/1080p_sr_distilled) |

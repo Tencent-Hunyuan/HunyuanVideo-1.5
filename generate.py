@@ -94,10 +94,8 @@ def str_to_bool(value):
     raise argparse.ArgumentTypeError(f"Boolean value expected, got: {value}")
 
 def load_checkpoint_to_transformer(pipe, checkpoint_path):
-    # Basic validation to avoid confusing checkpoint errors
     if not os.path.exists(checkpoint_path):
         raise ValueError(f"Checkpoint path does not exist: {checkpoint_path}")
-
     rank0_log(f"Loading checkpoint from {checkpoint_path}", "INFO")
     
     try:
