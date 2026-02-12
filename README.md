@@ -108,11 +108,11 @@ If you develop/use HunyuanVideo-1.5 in your projects, welcome to let us know.
 
 
 ## 📖 Introduction
-We present HunyuanVideo-1.5, a lightweight yet powerful video generation model that achieves state-of-the-art visual quality and motion coherence with only 8.3 billion parameters, enabling efficient inference on consumer-grade GPUs. This achievement is built upon several key components, including meticulous data curation, an advanced DiT architecture with selective and sliding tile attention(SSTA), enhanced bilingual understanding through glyph-aware text encoding , progressive pre-training and post-training, and an efficient video super-resolution network. Leveraging these designs, we developed a unified framework capable of high-quality text-to-video and image-to-video generation across multiple durations and resolutions. Extensive experiments demonstrate that this compact and proficient model establishes a new state-of-the-art among open-source models. By releasing the code and weights of HunyuanVideo-1.5, we provide the community with a high-performance foundation that significantly lowers the cost of video creation and research, making advanced video generation more accessible to all.
+We present HunyuanVideo-1.5, a lightweight yet powerful video generation model that achieves state-of-the-art visual quality and motion coherence with only 8.3 billion parameters, enabling efficient inference on consumer-grade GPUs. This achievement is built upon several key components, including meticulous data curation, an advanced DiT architecture with selective and sliding tile attention(SSTA), enhanced bilingual understanding through glyph-aware text encoding, progressive pre-training and post-training, and an efficient video super-resolution network. Leveraging these designs, we developed a unified framework capable of high-quality text-to-video and image-to-video generation across multiple durations and resolutions. Extensive experiments demonstrate that this compact and proficient model establishes a new state-of-the-art among open-source models. By releasing the code and weights of HunyuanVideo-1.5, we provide the community with a high-performance foundation that significantly lowers the cost of video creation and research, making advanced video generation more accessible to all.
 
 
 ## ✨ Key Features
-- **Lightweight High-Performance Architecture**: We propose an efficient architecture that integrates an 8.3B-parameter Diffusion Transformer (DiT) with a 3D causal VAE, achieving compression ratios of 16× in spatial dimensions and 4× along the temporal axis. Additionally, the innovative SSTA (Selective and Sliding Tile Attention) mechanism prunes redundant spatiotemporal kv blocks, significantly reduces computational overhead for long video sequences and accelerates inference, achieving an end-to-end speedup of $1.87 \times$ in 10-second 720p video synthesis compared to FlashAttention-3.
+- **Lightweight High-Performance Architecture**: We propose an efficient architecture that integrates an 8.3B-parameter Diffusion Transformer (DiT) with a 3D causal VAE, achieving compression ratios of 16× in spatial dimensions and 4× along the temporal axis. Additionally, the innovative SSTA (Selective and Sliding Tile Attention) mechanism prunes redundant spatiotemporal kv blocks, significantly reducing computational overhead for long video sequences and accelerates inference, achieving an end-to-end speedup of $1.87 \times$ in 10-second 720p video synthesis compared to FlashAttention-3.
 
 <div align="center">
 <img src="./assets/hy_video_1_5_dit.png" alt="HunyuanVideo-1.5 DiT" width="600">
@@ -206,16 +206,16 @@ Download the pretrained models before generating videos. Detailed instructions a
 |HunyuanVideo-1.5-480P-I2V-step-distill |[480P-I2V-step-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/480p_i2v_step_distilled) |
 |HunyuanVideo-1.5-720P-T2V|[720P-T2V](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_t2v) |
 |HunyuanVideo-1.5-720P-I2V |[720P-I2V](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v) |
-|HunyuanVideo-1.5-720P-T2V-cfg-distill| Comming soon |
+|HunyuanVideo-1.5-720P-T2V-cfg-distill| Coming soon |
 |HunyuanVideo-1.5-720P-I2V-cfg-distill |[720P-I2V-cfg-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v_distilled) |
-|HunyuanVideo-1.5-720P-T2V-sparse-cfg-distill| Comming soon |
+|HunyuanVideo-1.5-720P-T2V-sparse-cfg-distill| Coming soon |
 |HunyuanVideo-1.5-720P-I2V-sparse-cfg-distill |[720P-I2V-sparse-cfg-distill](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_i2v_distilled_sparse) |
 |HunyuanVideo-1.5-720P-sr-step-distill |[720P-sr](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/720p_sr_distilled) |
 |HunyuanVideo-1.5-1080P-sr-step-distill |[1080P-sr](https://huggingface.co/tencent/HunyuanVideo-1.5/tree/main/transformer/1080p_sr_distilled) |
 
 ## 📝 Prompt Guide
 ### Prompt Writing Handbook
-Prompt enhancement plays a crucial role in enabling our model to generate high-quality videos. By writing longer and more detailed prompts, the generated video will be significantly improved. We encourage you to craft comprehensive and descriptive prompts to achieve the best possible video quality. we recommend community partners consulting our official guide on how to write effective prompts. 
+Prompt enhancement plays a crucial role in enabling our model to generate high-quality videos. By writing longer and more detailed prompts, the generated video will be significantly improved. We encourage you to craft comprehensive and descriptive prompts to achieve the best possible video quality. We recommend community partners consulting our official guide on how to write effective prompts. 
 
 **Reference:** **[HunyuanVideo-1.5 Prompt Handbook](https://github.com/Tencent-Hunyuan/HunyuanVideo-1.5/blob/main/assets/HunyuanVideo_1_5_Prompt_Handbook_EN.md)**
 
