@@ -3,7 +3,6 @@
 # HunyuanVideo-1.5
 
 <div align="center">
-
 <img src="./assets/logo.png" alt="HunyuanVideo-1.5 Logo" width="80%">
 
 # 🎬 HunyuanVideo-1.5: 一款领先的轻量级视频生成模型
@@ -68,6 +67,8 @@ HunyuanVideo-1.5作为一款轻量级视频生成模型，仅需83亿参数即�
 - **Wan2GP v9.62** - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP): Wan2GP 是一款对显存要求非常低的应用（在 Hunyuan Video 1.5 下最低仅需 6GB 显存），支持 Lora 加速器实现 8 步生成，并且提供多种视频生成辅助工具。
 
 - **ComfyUI-MagCache** - [ComfyUI-MagCache](https://github.com/Zehong-Ma/ComfyUI-MagCache): MagCache 是一种无需训练的缓存方法，通过估计模型输出在不同时间步之间的波动差异来加速视频生成。在 20 步推理下，可为 HunyuanVideo-1.5 实现 1.7 倍加速。
+
+- **LeMiCa** - [LeMiCa](https://github.com/UnicomAI/LeMiCa): 中国联通数据科学与人工智能研究院提出的一种无需训练、全局最优建模的缓存加速框架。LeMiCa 可为 HunyuanVideo-1.5 提供多档可调加速配置，最高可实现 2.9×(T2V) 与 3.9×(I2V) 的推理加速。详情请参阅[LeMiCa4HunyuanVideo1.5](https://github.com/UnicomAI/LeMiCa/tree/main/LeMiCa4HunyuanVideo1.5)。
 
 
 ## 📑 开源计划
