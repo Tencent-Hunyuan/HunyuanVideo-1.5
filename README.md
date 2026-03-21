@@ -227,14 +227,25 @@ For users seeking to optimize prompts for other large models, it is recommended 
 ### Inference with Source Code
 
 
-For prompt rewriting, we recommend using Gemini or models deployed via vLLM. This codebase currently only supports models compatible with the vLLM API. If you wish to use Gemini, you will need to implement your own interface calls.
+For prompt rewriting, we recommend using Gemini or models deployed via vLLM. This codebase supports models compatible with the vLLM API, as well as [MiniMax](https://www.minimaxi.com/) Cloud API as an alternative cloud-hosted provider. If you wish to use Gemini, you will need to implement your own interface calls.
 
 For models with a vLLM API, note that T2V (text-to-video) and I2V (image-to-video) have different recommended models and environment variables:
 
 - T2V: use [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507), configure `T2V_REWRITE_BASE_URL` and `T2V_REWRITE_MODEL_NAME`
 - I2V: use [Qwen3-VL-235B-A22B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-235B-A22B-Instruct), configure `I2V_REWRITE_BASE_URL` and `I2V_REWRITE_MODEL_NAME`
 
-> You may set the above model names to any other vLLM-compatible models you have deployed (including HuggingFace models).  
+Alternatively, you can use **MiniMax Cloud API** for T2V prompt rewriting without deploying your own vLLM server:
+
+```bash
+export REWRITE_PROVIDER=minimax
+export MINIMAX_API_KEY="your_minimax_api_key"
+# Optionally override the model (default: MiniMax-M2.7):
+# export T2V_REWRITE_MODEL_NAME="MiniMax-M2.5-highspeed"
+```
+
+Available MiniMax models: `MiniMax-M2.7` (latest, recommended), `MiniMax-M2.5`, `MiniMax-M2.5-highspeed` (204K context). Get your API key at [MiniMax Platform](https://platform.minimaxi.com/).
+
+> You may set the above model names to any other vLLM-compatible models you have deployed (including HuggingFace models).
 > Rewriting is enabled by default (`--rewrite` defaults to `true`); to disable it explicitly, use `--rewrite false` or `--rewrite 0`. If no vLLM endpoint is configured, the pipeline runs without remote rewriting.
 
 Example: Generate a video (works for both T2V and I2V; set `IMAGE_PATH=none` for T2V or provide an image path for I2V)

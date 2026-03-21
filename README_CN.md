@@ -226,12 +226,23 @@ pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-s
 ### 使用源代码推理
 
 
-对于提示词重写，我们推荐使用 Gemini 或通过 vLLM 部署的大模型。当前代码库仅支持兼容 vLLM 接口的模型，如果您希望使用 Gemini，需自行实现相关接口调用。
+对于提示词重写，我们推荐使用 Gemini 或通过 vLLM 部署的大模型。当前代码库支持兼容 vLLM 接口的模型，同时也支持 [MiniMax](https://www.minimaxi.com/) 云端 API 作为替代方案。如果您希望使用 Gemini，需自行实现相关接口调用。
 
 对于 vLLM 接口的模型，需要注意 T2V 和 I2V 推荐使用不同的模型和环境变量：
 
 - 文生视频（T2V）：推荐使用 [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507)，并配置 `T2V_REWRITE_BASE_URL` 与 `T2V_REWRITE_MODEL_NAME`
 - 图生视频（I2V）：推荐使用 [Qwen3-VL-235B-A22B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-235B-A22B-Instruct)，并配置 `I2V_REWRITE_BASE_URL` 与 `I2V_REWRITE_MODEL_NAME`
+
+您也可以使用 **MiniMax 云端 API** 进行 T2V 提示词重写，无需自行部署 vLLM 服务：
+
+```bash
+export REWRITE_PROVIDER=minimax
+export MINIMAX_API_KEY="your_minimax_api_key"
+# 可选：指定模型（默认为 MiniMax-M2.7）：
+# export T2V_REWRITE_MODEL_NAME="MiniMax-M2.5-highspeed"
+```
+
+可用的 MiniMax 模型：`MiniMax-M2.7`（最新，推荐）、`MiniMax-M2.5`、`MiniMax-M2.5-highspeed`（204K 上下文）。请在 [MiniMax 开放平台](https://platform.minimaxi.com/) 获取 API Key。
 
 > 你也可以将上述模型名替换为任何你已部署、与 vLLM 兼容的模型（包括 HuggingFace 等模型）。
 >
