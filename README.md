@@ -60,16 +60,12 @@ HunyuanVideo-1.5 is a video generation model that delivers top-tier quality with
 If you develop/use HunyuanVideo-1.5 in your projects, welcome to let us know.
 
 - **Diffusers** - [HunyuanVideo-1.5 Diffusers](https://huggingface.co/collections/hunyuanvideo-community/hunyuanvideo-15): Official Hugging Face Diffusers integration for HunyuanVideo-1.5. Easily use HunyuanVideo-1.5 with the Diffusers library for seamless integration into your projects. See [Usage with Diffusers](#usage-with-diffusers) section for details.
-
 - **ComfyUI** - [ComfyUI](https://github.com/comfyanonymous/ComfyUI): A powerful and modular diffusion model GUI with a graph/nodes interface. ComfyUI supports HunyuanVideo-1.5 with various engineering optimizations for fast inference. We provide a [ComfyUI Usage Guide](./ComfyUI/README.md) for HunyuanVideo-1.5.
-
 - **Community-implemented ComfyUI Plugin** - [comfyui_hunyuanvideo_1.5_plugin](https://github.com/yuanyuan-spec/comfyui_hunyuanvideo_1.5_plugin): A community-implemented ComfyUI plugin for HunyuanVideo-1.5, offering both simplified and complete node sets for quick usage or deep workflow customization, with built-in automatic model download support.
-
 - **LightX2V** - [LightX2V](https://github.com/ModelTC/LightX2V): A lightweight and efficient video generation framework that integrates HunyuanVideo-1.5, supporting multiple engineering acceleration techniques for fast inference.
-
 - **Wan2GP v9.62** - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP): WanGP is a very low VRAM app (as low 6 GB of VRAM for Hunyuan Video 1.5) supports Lora Accelerator for a 8 steps generation and offers tools to facilitate Video Generation.
-
 - **ComfyUI-MagCache** - [ComfyUI-MagCache](https://github.com/Zehong-Ma/ComfyUI-MagCache): MagCache is a training-free caching approach that accelerates video generation by estimating fluctuating differences among model outputs across timesteps. It achieves 1.7x speedup for HunyuanVideo-1.5 with 20 inference steps.
+- **LeMiCa** - [LeMiCa](https://github.com/UnicomAI/LeMiCa): A training-free caching acceleration framework proposed by the Data Science & Artificial Intelligence Research Institute of China Unicom, featuring DAG-based globally optimal modeling. LeMiCa offers adjustable speedup options for HunyuanVideo-1.5, delivering up to 2.9× (T2V) and 3.9× (I2V) faster inference. See [LeMiCa4HunyuanVideo1.5](https://github.com/UnicomAI/LeMiCa/tree/main/LeMiCa4HunyuanVideo1.5) for details. 
 
 
 ## 📑 Open-source Plan
