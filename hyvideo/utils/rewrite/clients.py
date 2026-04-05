@@ -81,6 +81,62 @@ class DeepSeekClient(object):
 
         return content, reasoning_content
 
+class MiniMaxClient(object):
+    """
+    Client for MiniMax Cloud API (OpenAI-compatible).
+    Recommended models: MiniMax-M2.7, MiniMax-M2.5, MiniMax-M2.5-highspeed (204K context).
+    """
+
+    def __init__(self, api_key=None, model_name=None):
+        self.api_key = api_key or os.getenv("MINIMAX_API_KEY", "")
+        self.model_name = model_name or "MiniMax-M2.7"
+        self.base_url = "https://api.minimax.io/v1"
+
+    def minimax_api_call(self, system_prompt: str, user_input: str, temperature: float, max_tokens: int):
+        """
+        Use MiniMax Chat API to perform text rewriting, parse <think>...</think> sections
+        for reasoning content, and return (thinking, result).
+        """
+        # MiniMax temperature range: [0.0, 1.0]
+        temperature = max(0.0, min(temperature, 1.0))
+
+        client = openai.OpenAI(base_url=self.base_url, api_key=self.api_key, timeout=600)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_input},
+        ]
+
+        last_err = None
+
+        for i in range(10):
+            try:
+                response = client.chat.completions.create(
+                    model=self.model_name,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=False,
+                )
+                content = response.choices[0].message.content
+                thinking = ""
+                result = content or ""
+                if content and "</think>" in content:
+                    head, tail = content.split("</think>", 1)
+                    thinking = head.replace("<think>", "").strip()
+                    result = tail.strip()
+                return thinking, result
+            except Exception as e:
+                last_err = e
+                if i < 9:
+                    time.sleep(2 ** i)
+                    continue
+                raise last_err
+
+    def run_single_recaption(self, system_prompt, input_prompt, temperature=0.1, max_tokens=4096):
+        thinking, result = self.minimax_api_call(system_prompt, input_prompt, temperature, max_tokens)
+        return result
+
+
 class QwenClient(object):
     def __init__(self, base_url=None, model_name=None):
         # Recommended model: Qwen3-235B-A22B-Thinking-2507
