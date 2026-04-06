@@ -156,7 +156,7 @@ class HunyuanVideo_1_5_SR_Pipeline(HunyuanVideo_1_5_Pipeline):
             torch.Tensor: Low-resolution conditional latent tensor.
         """
         b, _, f, h, w = lq_latents.shape
-        mask_ones = torch.ones(b, 1, f, h, w).to(lq_latents.device)
+        mask_ones = torch.ones(b, 1, f, h, w, device=lq_latents.device, dtype=lq_latents.dtype)
         cond_latents = torch.concat([lq_latents, mask_ones], dim=1)
         
         return cond_latents
@@ -379,7 +379,7 @@ class HunyuanVideo_1_5_SR_Pipeline(HunyuanVideo_1_5_Pipeline):
 
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
-                t_expand = t.repeat(latent_model_input.shape[0])
+                t_expand = t.expand(latent_model_input.shape[0])
                 if not self.use_meanflow:
                     timesteps_r = None
                 else:
@@ -387,15 +387,15 @@ class HunyuanVideo_1_5_SR_Pipeline(HunyuanVideo_1_5_Pipeline):
                         timesteps_r = torch.tensor([0.0], device=self.execution_device)
                     else:
                         timesteps_r = timesteps[i + 1]
-                    timesteps_r = timesteps_r.repeat(latent_model_input.shape[0])
+                    timesteps_r = timesteps_r.expand(latent_model_input.shape[0])
 
                 guidance_expand = (
-                    torch.tensor(
-                        [embedded_guidance_scale] * latent_model_input.shape[0],
-                        dtype=torch.float32,
+                    torch.full(
+                        (latent_model_input.shape[0],),
+                        embedded_guidance_scale * 1000.0,
+                        dtype=self.target_dtype,
                         device=device,
-                    ).to(self.target_dtype)
-                    * 1000.0
+                    )
                     if embedded_guidance_scale is not None
                     else None
                 )

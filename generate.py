@@ -314,7 +314,7 @@ def main():
              '--save_pre_sr_video false/0 to disable'
     )
     parser.add_argument(
-        '--rewrite', type=str_to_bool, nargs='?', const=True, default=False,
+        '--rewrite', type=str_to_bool, nargs='?', const=True, default=True,
         help='Enable prompt rewriting (default: true). '
              'Use --rewrite or --rewrite true/1 to enable, --rewrite false/0 to disable'
     )
