@@ -71,6 +71,7 @@ If you develop/use HunyuanVideo-1.5 in your projects, welcome to let us know.
 
 - **ComfyUI-MagCache** - [ComfyUI-MagCache](https://github.com/Zehong-Ma/ComfyUI-MagCache): MagCache is a training-free caching approach that accelerates video generation by estimating fluctuating differences among model outputs across timesteps. It achieves 1.7x speedup for HunyuanVideo-1.5 with 20 inference steps.
 
+- **OmniWeaving** - [OmniWeaving](https://github.com/Tencent-Hunyuan/OmniWeaving): An omni-level unified video generation model built upon HunyuanVideo-1.5, excelling in free-form multimodal composition and reasoning-augmented generation. Specifically, it seamlessly handles a diverse array of tasks, such as Text-to-Video, First-Frame-to-Video, Key-Frames-to-Video, Video-to-Video Editing, Reference-to-Video, Compositional Multi-Image-to-Video, and Text-Image-Video-to-Video.
 
 ## 📑 Open-source Plan
 - HunyuanVideo-1.5 (T2V/I2V)
