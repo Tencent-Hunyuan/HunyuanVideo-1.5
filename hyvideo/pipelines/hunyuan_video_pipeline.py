@@ -709,7 +709,7 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             torch.Tensor or None: Vision states tensor or None if vision encoder is unavailable.
         """
         if reference_image is None:
-            vision_states = torch.zeros(latents.shape[0], self.config.vision_num_semantic_tokens, self.config.vision_states_dim).to(latents.device)
+            vision_states = torch.zeros(latents.shape[0], self.config.vision_num_semantic_tokens, self.config.vision_states_dim, device=latents.device, dtype=latents.dtype)
         else:
             reference_image = np.array(reference_image) if isinstance(reference_image, Image.Image) else reference_image
             if len(reference_image.shape) == 4:
@@ -753,11 +753,11 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             latents_concat = cond_latents.repeat(1, 1, latents.shape[2], 1, 1)
             latents_concat[:, :, 1:, :, :] = 0.0
         else:
-            latents_concat = torch.zeros(latents.shape[0], latents.shape[1], latents.shape[2], latents.shape[3], latents.shape[4]).to(latents.device)
+            latents_concat = torch.zeros_like(latents)
         
-        mask_zeros = torch.zeros(latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4])
-        mask_ones = torch.ones(latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4])
-        mask_concat = merge_tensor_by_mask(mask_zeros.cpu(), mask_ones.cpu(), mask=multitask_mask.cpu(), dim=2).to(device=latents.device)
+        mask_zeros = torch.zeros(latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4], device=latents.device)
+        mask_ones = torch.ones(latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4], device=latents.device)
+        mask_concat = merge_tensor_by_mask(mask_zeros, mask_ones, mask=multitask_mask.to(device=latents.device), dim=2)
 
         cond_latents = torch.concat([latents_concat, mask_concat], dim=1)
         
@@ -1203,23 +1203,23 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
 
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
-                t_expand = t.repeat(latent_model_input.shape[0])
+                t_expand = t.expand(latent_model_input.shape[0])
                 if self.use_meanflow:
                     if i == len(timesteps) - 1:
                         timesteps_r = torch.tensor([0.0], device=self.execution_device)
                     else:
                         timesteps_r = timesteps[i + 1]
-                    timesteps_r = timesteps_r.repeat(latent_model_input.shape[0])
+                    timesteps_r = timesteps_r.expand(latent_model_input.shape[0])
                 else:
                     timesteps_r = None
 
                 guidance_expand = (
-                    torch.tensor(
-                        [embedded_guidance_scale] * latent_model_input.shape[0],
-                        dtype=torch.float32,
+                    torch.full(
+                        (latent_model_input.shape[0],),
+                        embedded_guidance_scale * 1000.0,
+                        dtype=self.target_dtype,
                         device=device,
-                    ).to(self.target_dtype)
-                    * 1000.0
+                    )
                     if embedded_guidance_scale is not None
                     else None
                 )
