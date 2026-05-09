@@ -15,20 +15,34 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 import os
-from hyvideo.utils.rewrite.clients import QwenClient, QwenVLClient
+from hyvideo.utils.rewrite.clients import QwenClient, QwenVLClient, MiniMaxClient
 from hyvideo.utils.rewrite.t2v_prompt import t2v_rewrite_system_prompt
 from hyvideo.utils.rewrite.i2v_prompt import i2v_rewrite_system_prompt
 
-def t2v_rewrite(user_prompt, rewrite_client=None):
+
+def _create_t2v_client():
+    """Create the appropriate T2V rewrite client based on REWRITE_PROVIDER env var."""
+    provider = os.getenv("REWRITE_PROVIDER", "").lower()
+    if provider == "minimax":
+        return MiniMaxClient(
+            api_key=os.getenv("MINIMAX_API_KEY"),
+            model_name=os.getenv("T2V_REWRITE_MODEL_NAME", "MiniMax-M2.7"),
+        )
+    # Default: QwenClient (vLLM-compatible)
     base_url = os.getenv("T2V_REWRITE_BASE_URL")
     model_name = os.getenv("T2V_REWRITE_MODEL_NAME")
     if not base_url or not model_name:
         raise EnvironmentError(
             "T2V_REWRITE_BASE_URL and T2V_REWRITE_MODEL_NAME must be set in the environment variables "
-            "when prompt rewriting is enabled. Please configure the rewrite service correctly."
+            "when prompt rewriting is enabled. Please configure the rewrite service correctly. "
+            "Alternatively, set REWRITE_PROVIDER=minimax and MINIMAX_API_KEY to use MiniMax Cloud API."
         )
+    return QwenClient(base_url, model_name)
+
+
+def t2v_rewrite(user_prompt, rewrite_client=None):
     if rewrite_client is None:
-        rewrite_client = QwenClient(base_url, model_name)
+        rewrite_client = _create_t2v_client()
     try:
         rewritten_prompt = rewrite_client.run_single_recaption(t2v_rewrite_system_prompt, user_prompt)
     except Exception as e:
