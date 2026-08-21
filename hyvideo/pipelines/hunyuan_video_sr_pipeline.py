@@ -37,7 +37,7 @@ from hyvideo.models.transformers.modules.upsample import SRTo720pUpsampler
 from hyvideo.utils.data_utils import generate_crop_size_list
 
 from .hunyuan_video_pipeline import HunyuanVideo_1_5_Pipeline
-from .pipeline_utils import rescale_noise_cfg, retrieve_timesteps
+from .pipeline_utils import randn_tensor, rescale_noise_cfg, retrieve_timesteps
 
 def expand_dims(tensor: torch.Tensor, ndim: int):
     shape = tensor.shape + (1,) * (ndim - tensor.ndim)
@@ -139,8 +139,14 @@ class HunyuanVideo_1_5_SR_Pipeline(HunyuanVideo_1_5_Pipeline):
         )
 
 
-    def add_noise_to_lq(self, lq_latents, strength=0.7):
-        noise = torch.randn_like(lq_latents)
+    def add_noise_to_lq(self, lq_latents, strength=0.7, generator=None):
+        noise = randn_tensor(
+            lq_latents.shape,
+            generator=generator,
+            device=lq_latents.device,
+            dtype=lq_latents.dtype,
+            default_device=self.noise_init_device,
+        )
         timestep = torch.tensor([1000.0], device=self.execution_device) * strength
         t = expand_dims(timestep, lq_latents.ndim)
         return (1 - t / 1000.0) * lq_latents + (t / 1000.0) * noise
@@ -344,7 +350,7 @@ class HunyuanVideo_1_5_SR_Pipeline(HunyuanVideo_1_5_Pipeline):
         lq_latents = lq_latents.to(dtype=latents.dtype)
 
         noise_scale = 0.7
-        lq_latents = self.add_noise_to_lq(lq_latents, noise_scale)
+        lq_latents = self.add_noise_to_lq(lq_latents, noise_scale, generator=generator)
 
         multitask_mask = self.get_task_mask(task_type, latent_target_length)
         cond_latents = self._prepare_cond_latents(task_type, image_cond, latents, multitask_mask)
