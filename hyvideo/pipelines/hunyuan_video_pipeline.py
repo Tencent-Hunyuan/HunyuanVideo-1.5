@@ -73,7 +73,7 @@ from hyvideo.utils.multitask_utils import (
 )
 from hyvideo.commons.infer_state import InferState
 
-from .pipeline_utils import retrieve_timesteps, rescale_noise_cfg
+from .pipeline_utils import randn_tensor, retrieve_timesteps, rescale_noise_cfg
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -462,14 +462,14 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             latent_height,
             latent_width,
         )
-        if isinstance(generator, list) and len(generator) != batch_size:
-            raise ValueError(
-                f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"
-                f" size of {batch_size}. Make sure the batch size matches the length of the generators."
-            )
-
         if latents is None:
-            latents = torch.randn(shape, generator=generator, device=self.noise_init_device, dtype=dtype).to(device)
+            latents = randn_tensor(
+                shape,
+                generator=generator,
+                device=device,
+                dtype=dtype,
+                default_device=self.noise_init_device,
+            )
         else:
             latents = latents.to(device)
 
@@ -1019,6 +1019,7 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
         else:
             self.scheduler = self._create_scheduler(flow_shift)
 
+        sr_generator = generator
         if seed is None or seed == -1:
             seed = random.randint(100000, 999999)
 
@@ -1268,6 +1269,7 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
                 video_length=video_length,
                 negative_prompt="",
                 num_videos_per_prompt=num_videos_per_prompt,
+                generator=sr_generator,
                 seed=seed,
                 output_type=output_type,
 

@@ -18,6 +18,34 @@ from typing import Optional, Union, List
 import inspect
 import torch
 
+
+def randn_tensor(
+    shape,
+    generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+    device: Optional[Union[str, torch.device]] = None,
+    dtype: Optional[torch.dtype] = None,
+    default_device: Union[str, torch.device] = "cpu",
+):
+    """Create batched noise while honoring single or per-sample generators."""
+    shape = tuple(shape)
+    device = torch.device(device) if device is not None else torch.device(default_device)
+
+    if isinstance(generator, list):
+        if len(generator) != shape[0]:
+            raise ValueError(
+                f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"
+                f" size of {shape[0]}. Make sure the batch size matches the length of the generators."
+            )
+        samples = [
+            torch.randn((1, *shape[1:]), generator=item, device=item.device, dtype=dtype).to(device)
+            for item in generator
+        ]
+        return torch.cat(samples, dim=0)
+
+    random_device = generator.device if generator is not None else torch.device(default_device)
+    return torch.randn(shape, generator=generator, device=random_device, dtype=dtype).to(device)
+
+
 def retrieve_timesteps(
     scheduler,
     num_inference_steps: Optional[int] = None,
