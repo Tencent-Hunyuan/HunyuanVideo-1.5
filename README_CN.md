@@ -448,6 +448,15 @@ HunyuanVideo-1.5 使用 **Muon 优化器**进行训练，该优化器能够加�
 
 详细的格式文档请参见 `train.py` 中的 `create_dummy_dataloader()` 函数。
 
+分布式训练时，Map-style 数据集应按**数据并行副本**分片，而不是按所有全局 rank 分片。
+有效的数据并行大小为 `world_size // sp_size`：同一序列并行组内的 rank 必须读取同一
+样本，不同序列并行组则读取不同的 sampler 分片。FSDP 只负责切分模型状态，不会自动
+切分数据集。仓库提供的 `create_data_parallel_sampler()` 和示例 DataLoader 已实现这一拓扑。
+
+例如，`world_size=16, sp_size=8` 会得到两个数据并行分片；当
+`world_size=8, sp_size=8` 时，8 个 rank 共同组成一个序列并行组，因此所有 rank 看到
+同一 batch 是预期行为，此时不存在额外的数据并行副本。
+
 #### 2. 运行训练
 
 **单 GPU：**
