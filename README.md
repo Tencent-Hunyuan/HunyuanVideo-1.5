@@ -450,6 +450,16 @@ Replace the `create_dummy_dataloader()` function in `train.py` with your own imp
 
 See the `create_dummy_dataloader()` function in `train.py` for detailed format documentation.
 
+For distributed training, shard map-style datasets across **data-parallel replicas**, not across
+all global ranks. The effective data-parallel size is `world_size // sp_size`: ranks in one
+sequence-parallel group must consume the same sample, while different sequence-parallel groups
+consume different sampler shards. FSDP shards model state and does not shard the dataset itself.
+The provided `create_data_parallel_sampler()` helper and dummy DataLoader implement this layout.
+
+For example, `world_size=16, sp_size=8` produces two data-parallel shards. With
+`world_size=8, sp_size=8`, all eight ranks form one sequence-parallel group, so seeing the same
+batch on every rank is expected and there is no data-parallel replica.
+
 #### 2. Run Training
 
 **Single GPU:**

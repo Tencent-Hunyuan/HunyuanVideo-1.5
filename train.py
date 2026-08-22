@@ -76,6 +76,7 @@ import imageio
 from hyvideo.pipelines.hunyuan_video_pipeline import HunyuanVideo_1_5_Pipeline
 from hyvideo.commons.parallel_states import get_parallel_state, initialize_parallel_state
 from hyvideo.optim.muon import get_muon_optimizer
+from hyvideo.utils.distributed_data import create_data_parallel_sampler, set_dataloader_epoch
 
 from torch.distributed._composable.fsdp import (
     MixedPrecisionPolicy,
@@ -969,6 +970,7 @@ class HunyuanVideoTrainer:
         self.transformer.train()
         
         while self.global_step < self.config.max_steps:
+            set_dataloader_epoch(dataloader, self.current_epoch)
             for batch in dataloader:
                 if self.global_step >= self.config.max_steps:
                     break
@@ -990,6 +992,7 @@ class HunyuanVideoTrainer:
                     self.save_checkpoint(self.global_step + 1)
                 
                 self.global_step += 1
+            self.current_epoch += 1
         
         self.save_checkpoint(self.global_step)
         logger.info("Training completed!")
@@ -1044,7 +1047,12 @@ class HunyuanVideoTrainer:
         """
 
 
-def create_dummy_dataloader(config: TrainingConfig):
+def create_dummy_dataloader(
+    config: TrainingConfig,
+    *,
+    dp_rank: int = 0,
+    dp_size: int = 1,
+):
     """
     Create a dummy dataloader for testing.
     
@@ -1087,6 +1095,12 @@ def create_dummy_dataloader(config: TrainingConfig):
     - For "video" data: randomly samples between t2v (text-to-video) and i2v (image-to-video)
       based on config.i2v_prob probability
     - For "image" data: always uses t2v task
+
+    Distributed data loading:
+    - ``dp_size`` is the number of data-parallel replicas (``world_size // sp_size``),
+      not the global process count.
+    - Ranks in one sequence-parallel group share the same ``dp_rank`` and must receive
+      the same sample. Different data-parallel replicas receive different sampler shards.
     
     Example sample format (what dataset __getitem__ should return):
     {
@@ -1132,10 +1146,17 @@ def create_dummy_dataloader(config: TrainingConfig):
             }
     
     dataset = DummyDataset()
+    sampler = create_data_parallel_sampler(
+        dataset,
+        dp_rank=dp_rank,
+        dp_size=dp_size,
+        seed=config.seed,
+    )
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=config.batch_size,
-        shuffle=True,
+        shuffle=sampler is None,
+        sampler=sampler,
         num_workers=config.num_workers,
     )
     return dataloader
@@ -1266,7 +1287,11 @@ def main():
     )
     
     trainer = HunyuanVideoTrainer(config)
-    dataloader = create_dummy_dataloader(config)
+    dataloader = create_dummy_dataloader(
+        config,
+        dp_rank=trainer.dp_rank,
+        dp_size=trainer.dp_size,
+    )
     trainer.train(dataloader)
 
 
