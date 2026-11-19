@@ -38,6 +38,7 @@ from diffusers.models import AutoencoderKL
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import BaseOutput, deprecate, logging
+from diffusers.utils.torch_utils import randn_tensor
 
 from hyvideo.commons import (
     PIPELINE_CONFIGS,
@@ -469,7 +470,9 @@ class HunyuanVideo_1_5_Pipeline(DiffusionPipeline):
             )
 
         if latents is None:
-            latents = torch.randn(shape, generator=generator, device=self.noise_init_device, dtype=dtype).to(device)
+            latents = randn_tensor(
+                shape, generator=generator, device=self.noise_init_device, dtype=dtype
+            ).to(device)
         else:
             latents = latents.to(device)
 
